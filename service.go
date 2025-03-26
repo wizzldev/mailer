@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
 
 	"github.com/wizzldev/mailer/types"
 	"gopkg.in/gomail.v2"
@@ -97,6 +98,11 @@ func (ms *MailService) Send(init MessageInit, content string) error {
 		contentType = typ[0]
 	}
 
+	if os.Getenv("TEST_MODE") == "true" {
+		ms.testPrint(from, init.ToAddress, init.Subject, content)
+		return nil
+	}
+
 	// configure email message
 	message := gomail.NewMessage()
 	message.SetHeader("From", from)
@@ -117,4 +123,11 @@ func (ms *MailService) Send(init MessageInit, content string) error {
 	}
 
 	return d.DialAndSend(message)
+}
+
+func (ms *MailService) testPrint(from, to, subject, content string) {
+	fmt.Printf("From: %s\n", from)
+	fmt.Printf("To: %s\n", to)
+	fmt.Printf("Subject: %s\n", subject)
+	fmt.Printf("Content:\n%s\n", content)
 }
