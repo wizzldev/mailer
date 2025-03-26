@@ -99,10 +99,10 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // writeSuccess writes a success response to the client.
 func writeSuccess(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"message": "Email sent successfully",
 	})
-	w.WriteHeader(http.StatusOK)
 }
 
 // writeError writes an error response to the client.
