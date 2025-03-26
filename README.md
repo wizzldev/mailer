@@ -35,7 +35,7 @@ import (
 )
 
 func main() {
-	client := mailer.NewClient("localhost:8080")
+	client := mailer.NewClient("http://localhost:3000")
 	err := client.SendText("recipient@example.com", "Hello", "Hello, world!")
 	if err != nil {
 		fmt.Println(err)
