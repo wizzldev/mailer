@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -30,27 +31,27 @@ func (s *ApiServer) Start(listenAddr string) error {
 func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// check if the request path is /send
 	if r.URL.Path != "/send" {
-		writeError(w, http.StatusNotFound)
+		writeError(w, "This resource is not found.", http.StatusNotFound)
 		return
 	}
 
 	// check if the request method is POST
 	if r.Method != http.MethodPost {
-		writeError(w, http.StatusBadRequest)
+		writeError(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
 	// read the request body
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError)
+		writeError(w, fmt.Sprintf("Failed to read request body: %v", err), http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
 	var data types.Message
 	if err := json.Unmarshal(b, &data); err != nil {
-		writeError(w, http.StatusBadRequest)
+		writeError(w, fmt.Sprintf("Failed to unmarshal request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -64,7 +65,7 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if data.Template != nil {
 		if err := s.svc.SendTemplate(init, data.Template.ID, data.Template.Props); err != nil {
 			log.Println(err)
-			writeError(w, http.StatusInternalServerError)
+			writeError(w, fmt.Sprintf("Failed to send template email: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -75,7 +76,7 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// write an error if both content and template are nil
 	if data.Content == nil {
-		writeError(w, http.StatusBadRequest)
+		writeError(w, fmt.Sprintf("No content or template provided"), http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// send the email
 	if err := sender(init, data.Content.Body); err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError)
+		writeError(w, fmt.Sprintf("Failed to send email: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -105,6 +106,6 @@ func writeSuccess(w http.ResponseWriter) {
 }
 
 // writeError writes an error response to the client.
-func writeError(w http.ResponseWriter, statusCode int) {
-	http.Error(w, "Invalid request", statusCode)
+func writeError(w http.ResponseWriter, message string, statusCode int) {
+	http.Error(w, message, statusCode)
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -70,22 +71,28 @@ func (c *Client) SendTemplate(to, subject string, template TemplateID, props Tem
 func (c *Client) send(msg *Message) error {
 	b, err := json.Marshal(msg)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to marshal message: %v", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, c.server+"/send", bytes.NewReader(b))
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create request: %v", err)
 	}
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to send request: %v", err)
 	}
 	defer res.Body.Close()
 
+	b, _ = io.ReadAll(res.Body)
+
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+		unexpErr := fmt.Errorf("unexpected status code: %d", res.StatusCode)
+		if b != nil {
+			return fmt.Errorf("%s: %w", string(b), unexpErr)
+		}
+		return fmt.Errorf("Unknown error: %w", unexpErr)
 	}
 
 	return nil
