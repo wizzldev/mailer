@@ -64,7 +64,6 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if the message is a template
 	if data.Template != nil {
 		if err := s.svc.SendTemplate(init, data.Template.ID, data.Template.Props); err != nil {
-			log.Println(err)
 			writeError(w, fmt.Sprintf("Failed to send template email: %v", err), http.StatusInternalServerError)
 			return
 		}
@@ -88,7 +87,6 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// send the email
 	if err := sender(init, data.Content.Body); err != nil {
-		log.Println(err)
 		writeError(w, fmt.Sprintf("Failed to send email: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -99,6 +97,7 @@ func (s *ApiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // writeSuccess writes a success response to the client.
 func writeSuccess(w http.ResponseWriter) {
+	log.Println("Email Sent")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"message": "Email sent successfully",
@@ -107,5 +106,6 @@ func writeSuccess(w http.ResponseWriter) {
 
 // writeError writes an error response to the client.
 func writeError(w http.ResponseWriter, message string, statusCode int) {
+	log.Println(message, statusCode)
 	http.Error(w, message, statusCode)
 }

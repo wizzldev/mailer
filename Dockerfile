@@ -9,4 +9,6 @@ COPY . .
 
 RUN go build -o bin/mailer
 
+EXPOSE 7000
+
 CMD ["./bin/mailer", "--listenAddr", ":7000"]
