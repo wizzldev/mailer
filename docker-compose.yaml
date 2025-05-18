@@ -1,0 +1,8 @@
+services:
+  mailer:
+    build:
+      context: .
+    container_name: wizzl-app-mailer
+    restart: always
+    env_file:
+      - .env
